@@ -87,13 +87,13 @@ spring:
       enabled: false
   task:
     execution:
-      thread-name-prefix: jbpm-poc-task-
+      thread-name-prefix: requestapproval-poc-task-
       pool:
         core-size: 2
         max-size: 50
         queue-capacity: 10000
     scheduling:
-      thread-name-prefix: jbpm-poc-scheduling-
+      thread-name-prefix: requestapproval-poc-scheduling-
       pool:
         size: 2
   thymeleaf:
