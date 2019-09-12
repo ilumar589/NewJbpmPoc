@@ -17,6 +17,7 @@ public class TaskDto implements Serializable {
 	private Long createdOn;
 	private String deploymentId;
 	private String processId;
+	private Long processInstanceId;
 
 	protected TaskDto() {
 	}
@@ -102,6 +103,15 @@ public class TaskDto implements Serializable {
 		this.processId = processId;
 	}
 
+	@JsonProperty("process-instance-id")
+	public Long getProcessInstanceId() {
+		return processInstanceId;
+	}
+
+	public void setProcessInstanceId(Long processInstanceId) {
+		this.processInstanceId = processInstanceId;
+	}
+
 	public static class Builder {
 
 		private Long id;
@@ -111,6 +121,7 @@ public class TaskDto implements Serializable {
 		private Long createdOn;
 		private String deploymentId;
 		private String processId;
+		private Long processInstanceId;
 
 		private Builder() {
 		}
@@ -154,6 +165,11 @@ public class TaskDto implements Serializable {
 			return this;
 		}
 
+		public Builder withProcessInstanceId(Long processInstanceId) {
+			this.processInstanceId = processInstanceId;
+			return this;
+		}
+
 		public TaskDto build() {
 			TaskDto task = new TaskDto();
 			task.id = id;
@@ -163,6 +179,7 @@ public class TaskDto implements Serializable {
 			task.createdOn = createdOn;
 			task.deploymentId = deploymentId;
 			task.processId = processId;
+			task.processInstanceId = processInstanceId;
 			return task;
 		}
 	}

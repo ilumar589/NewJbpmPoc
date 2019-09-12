@@ -5,10 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
 import java.io.Serializable;
-import java.util.Objects;
 import java.time.LocalDate;
+import java.util.Objects;
 
 /**
  * Persistent tokens are used by Spring Security to automatically log in users.
@@ -16,7 +15,7 @@ import java.time.LocalDate;
  * @see com.poc.requestapproval.security.PersistentTokenRememberMeServices
  */
 @Entity
-@Table(name = "jhi_persistent_token")
+@Table(name = "persistent_token")
 public class PersistentToken implements Serializable {
 
     private static final long serialVersionUID = 1L;

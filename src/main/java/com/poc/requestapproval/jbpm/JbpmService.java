@@ -1,5 +1,8 @@
 package com.poc.requestapproval.jbpm;
 
+import com.poc.requestapproval.domain.Authority;
+import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.service.UserService;
 import com.poc.requestapproval.task.TaskDto;
 import com.poc.requestapproval.task.TaskRequest;
 import com.poc.requestapproval.task.TaskSummaryWrapper;
@@ -16,8 +19,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class JbpmService {
@@ -26,10 +29,21 @@ public class JbpmService {
 	private static String PROCESS_ID = "ApprovalRequest";
 	private String jbpmConsoleUrl = "http://localhost:8180/jbpm-console";
 
+	@Autowired
+	private UserService userService;
+
+
 	public Collection<TaskDto> query() {
 		RestTemplate restTemplate = new RestTemplate();
 		restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor("admin", "admin"));
+		//append map_taskOwner
 		ResponseEntity<TaskSummaryWrapper> response = restTemplate.getForEntity(jbpmConsoleUrl + "/rest/task/query", TaskSummaryWrapper.class);
+
+		//todo
+		// /runtime/{deploymentId}/history/instance/{procInstId}/variable
+		//return as Collection<TaskProcessDTO>
+		String processes = getProcesses();
+
 		return response.getBody().getTasks();
 	}
 
@@ -69,6 +83,40 @@ public class JbpmService {
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
 		restTemplate.postForEntity(jbpmConsoleUrl + "/rest/runtime/" + DEPLOYMENT_ID + "/process/" + PROCESS_ID + "/start",  request, null);
+	}
+
+	public String getProcesses() {
+		Optional<User> user = userService.getUserWithAuthorities();
+		if(user.isPresent()) {
+			Authority authority = userService.getRequesterOrApproverRole(user);
+			String processVar = getProcessVariable(authority.getName().split("_")[0]);
+
+			RestTemplate restTemplate = new RestTemplate();
+			restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor("admin", "admin"));
+			ResponseEntity<String> response =
+					restTemplate.getForEntity(jbpmConsoleUrl + "/rest/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances", String.class);
+			return response.getBody();
+		}
+		return null;
+	}
+
+	private String getProcessVariable(String index) {
+		String processVar = "";
+		switch (index) {
+			case "0" :
+				processVar = "requesterId";
+				break;
+			case "1" :
+				processVar = "firstApprover";
+				break;
+			case "2" :
+				processVar = "secondApprover";
+				break;
+			case "3" :
+				processVar = "thirdApprover";
+				break;
+		}
+		return processVar;
 	}
 
 	}

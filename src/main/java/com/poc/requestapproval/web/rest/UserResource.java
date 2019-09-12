@@ -3,7 +3,6 @@ package com.poc.requestapproval.web.rest;
 import com.poc.requestapproval.config.Constants;
 import com.poc.requestapproval.domain.User;
 import com.poc.requestapproval.repository.UserRepository;
-import com.poc.requestapproval.jbpm.JbpmService;
 import com.poc.requestapproval.security.AuthoritiesConstants;
 import com.poc.requestapproval.service.MailService;
 import com.poc.requestapproval.service.UserService;
@@ -11,11 +10,9 @@ import com.poc.requestapproval.service.dto.UserDTO;
 import com.poc.requestapproval.web.rest.errors.BadRequestAlertException;
 import com.poc.requestapproval.web.rest.errors.EmailAlreadyUsedException;
 import com.poc.requestapproval.web.rest.errors.LoginAlreadyUsedException;
-
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +28,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * REST controller for managing users.
@@ -187,5 +185,11 @@ public class UserResource {
         log.debug("REST request to delete User: {}", login);
         userService.deleteUser(login);
         return ResponseEntity.noContent().headers(HeaderUtil.createAlert(applicationName,  "A user is deleted with identifier " + login, login)).build();
+    }
+
+    @GetMapping("/users/approvers")
+    public List<User> getNextApprovers() {
+        return userService.getAllUsersWithRole();
+
     }
 }

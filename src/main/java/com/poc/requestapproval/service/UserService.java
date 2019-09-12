@@ -10,8 +10,9 @@ import com.poc.requestapproval.security.AuthoritiesConstants;
 import com.poc.requestapproval.security.SecurityUtils;
 import com.poc.requestapproval.service.dto.UserDTO;
 import com.poc.requestapproval.service.util.RandomUtil;
-import com.poc.requestapproval.web.rest.errors.*;
-
+import com.poc.requestapproval.web.rest.errors.EmailAlreadyUsedException;
+import com.poc.requestapproval.web.rest.errors.InvalidPasswordException;
+import com.poc.requestapproval.web.rest.errors.LoginAlreadyUsedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -21,8 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -292,6 +293,26 @@ public class UserService {
      */
     public List<String> getAuthorities() {
         return authorityRepository.findAll().stream().map(Authority::getName).collect(Collectors.toList());
+    }
+
+    public List<User> getAllUsersWithRole() {
+
+        Optional<User> user = getUserWithAuthorities();
+        if(user.isPresent()) {
+            Authority authority = getRequesterOrApproverRole(user);
+            Long requiredRoleValue = Long.valueOf(authority.getName().split("_")[0]) + 1;
+
+            return userRepository.findByAuthorities_Name(requiredRoleValue.toString() + "_APPROVER");
+        }
+        return Collections.emptyList();
+    }
+
+    public Authority getRequesterOrApproverRole(Optional<User> user) {
+    	return user.get().getAuthorities()
+			    .stream()
+			    .filter(auth -> auth.getName().contains("REQUESTER") || auth.getName().contains("APPROVER"))
+			    .findFirst()
+			    .orElse(new Authority("0_REQUESTER"));
     }
 
 }
