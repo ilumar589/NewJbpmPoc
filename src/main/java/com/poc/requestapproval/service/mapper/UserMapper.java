@@ -2,6 +2,7 @@ package com.poc.requestapproval.service.mapper;
 
 import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.service.dto.UserDTO;
 
 import org.springframework.stereotype.Service;
@@ -62,7 +63,7 @@ public class UserMapper {
         if(authoritiesAsString != null){
             authorities = authoritiesAsString.stream().map(string -> {
                 Authority auth = new Authority();
-                auth.setName(string);
+                auth.setName(UserAuthorityType.fromValue(string));
                 return auth;
             }).collect(Collectors.toSet());
         }

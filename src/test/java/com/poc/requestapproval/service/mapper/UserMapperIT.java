@@ -74,7 +74,7 @@ public class UserMapperIT {
     @Test
     public void userDTOsToUsersWithAuthoritiesStringShouldMapToUsersWithAuthoritiesDomain() {
         Set<String> authoritiesAsString = new HashSet<>();
-        authoritiesAsString.add("ADMIN");
+        authoritiesAsString.add("ROLE_ADMIN");
         userDto.setAuthorities(authoritiesAsString);
 
         List<UserDTO> usersDto = new ArrayList<>();
@@ -86,7 +86,7 @@ public class UserMapperIT {
         assertThat(users).size().isEqualTo(1);
         assertThat(users.get(0).getAuthorities()).isNotNull();
         assertThat(users.get(0).getAuthorities()).isNotEmpty();
-        assertThat(users.get(0).getAuthorities().iterator().next().getName()).isEqualTo("ADMIN");
+        assertThat(users.get(0).getAuthorities().iterator().next().toString()).isEqualTo("ROLE_ADMIN");
     }
 
     @Test
@@ -107,7 +107,7 @@ public class UserMapperIT {
     @Test
     public void userDTOToUserMapWithAuthoritiesStringShouldReturnUserWithAuthorities() {
         Set<String> authoritiesAsString = new HashSet<>();
-        authoritiesAsString.add("ADMIN");
+        authoritiesAsString.add("ROLE_ADMIN");
         userDto.setAuthorities(authoritiesAsString);
 
         User user = userMapper.userDTOToUser(userDto);
@@ -115,7 +115,7 @@ public class UserMapperIT {
         assertThat(user).isNotNull();
         assertThat(user.getAuthorities()).isNotNull();
         assertThat(user.getAuthorities()).isNotEmpty();
-        assertThat(user.getAuthorities().iterator().next().getName()).isEqualTo("ADMIN");
+        assertThat(user.getAuthorities().iterator().next().toString()).isEqualTo("ROLE_ADMIN");
     }
 
     @Test

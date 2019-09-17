@@ -15,9 +15,11 @@ import java.util.Map;
 @RequestMapping("/api")
 public class RequestResource {
 
+	private final JbpmService jbpmService;
 
-	@Autowired
-	private JbpmService jbpmService;
+	public RequestResource(JbpmService jbpmService) {
+		this.jbpmService = jbpmService;
+	}
 
 	@GetMapping("/requests/{userId}")
 	public Collection<TaskDto> getTasks(@PathVariable Long userId) {

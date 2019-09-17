@@ -3,6 +3,7 @@ package com.poc.requestapproval.service;
 import com.poc.requestapproval.config.Constants;
 import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.repository.AuthorityRepository;
 import com.poc.requestapproval.repository.PersistentTokenRepository;
 import com.poc.requestapproval.repository.UserRepository;
@@ -292,27 +293,16 @@ public class UserService {
      * @return a list of all the authorities.
      */
     public List<String> getAuthorities() {
-        return authorityRepository.findAll().stream().map(Authority::getName).collect(Collectors.toList());
+        return authorityRepository.findAll().stream().map(Authority::getName).map(UserAuthorityType::name).collect(Collectors.toList());
     }
 
-    public List<User> getAllUsersWithRole() {
-
+    public List<User> getNextApproversForLoggedInUser() {
         Optional<User> user = getUserWithAuthorities();
         if(user.isPresent()) {
-            Authority authority = getRequesterOrApproverRole(user);
-            Long requiredRoleValue = Long.valueOf(authority.getName().split("_")[0]) + 1;
-
-            return userRepository.findByAuthorities_Name(requiredRoleValue.toString() + "_APPROVER");
+            Authority authority = user.get().getAuthorities().stream().findFirst().orElse(new Authority(UserAuthorityType.REQUESTER));
+            long requiredRoleValue = Long.parseLong(authority.getName().toString().split("_")[0]) + 1;
+            return userRepository.findByAuthorities_Name(Long.toString(requiredRoleValue) + "_APPROVER");
         }
         return Collections.emptyList();
     }
-
-    public Authority getRequesterOrApproverRole(Optional<User> user) {
-    	return user.get().getAuthorities()
-			    .stream()
-			    .filter(auth -> auth.getName().contains("REQUESTER") || auth.getName().contains("APPROVER"))
-			    .findFirst()
-			    .orElse(new Authority("0_REQUESTER"));
-    }
-
 }

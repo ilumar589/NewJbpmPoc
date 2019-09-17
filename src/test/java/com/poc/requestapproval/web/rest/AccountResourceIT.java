@@ -5,6 +5,7 @@ import com.poc.requestapproval.config.Constants;
 import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.PersistentToken;
 import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.repository.AuthorityRepository;
 import com.poc.requestapproval.repository.PersistentTokenRepository;
 import com.poc.requestapproval.repository.UserRepository;
@@ -123,7 +124,7 @@ public class AccountResourceIT {
     public void testGetExistingAccount() throws Exception {
         Set<Authority> authorities = new HashSet<>();
         Authority authority = new Authority();
-        authority.setName(AuthoritiesConstants.ADMIN);
+        authority.setName(UserAuthorityType.ROLE_ADMIN);
         authorities.add(authority);
 
         User user = new User();
@@ -146,7 +147,7 @@ public class AccountResourceIT {
             .andExpect(jsonPath("$.email").value("john.doe@jhipster.com"))
             .andExpect(jsonPath("$.imageUrl").value("http://placehold.it/50x50"))
             .andExpect(jsonPath("$.langKey").value("en"))
-            .andExpect(jsonPath("$.authorities").value(AuthoritiesConstants.ADMIN));
+            .andExpect(jsonPath("$.authorities").value(UserAuthorityType.ROLE_ADMIN.name()));
     }
 
     @Test

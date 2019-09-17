@@ -1,9 +1,6 @@
 package com.poc.requestapproval.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -22,19 +19,21 @@ public class Authority implements Serializable {
     @Size(max = 50)
     @Id
     @Column(length = 50)
-    private String name;
+    @Enumerated(EnumType.STRING)
+    @Convert(converter = UserAuthorityTypeConverter.class)
+    private UserAuthorityType name;
 
     public Authority() {}
 
-    public Authority(@NotNull @Size(max = 50) String name) {
+    public Authority(@NotNull @Size(max = 50) UserAuthorityType name) {
         this.name = name;
     }
 
-    public String getName() {
+    public UserAuthorityType getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(UserAuthorityType name) {
         this.name = name;
     }
 

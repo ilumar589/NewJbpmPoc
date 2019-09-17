@@ -3,6 +3,7 @@ package com.poc.requestapproval.web.rest;
 import com.poc.requestapproval.JbpmPocApp;
 import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.repository.UserRepository;
 import com.poc.requestapproval.jbpm.JbpmService;
 import com.poc.requestapproval.security.AuthoritiesConstants;
@@ -546,7 +547,7 @@ public class UserResourceIT {
         user.setLastModifiedDate(Instant.now());
         Set<Authority> authorities = new HashSet<>();
         Authority authority = new Authority();
-        authority.setName(AuthoritiesConstants.USER);
+        authority.setName(UserAuthorityType.REQUESTER);
         authorities.add(authority);
         user.setAuthorities(authorities);
 
@@ -564,7 +565,7 @@ public class UserResourceIT {
         assertThat(userDTO.getCreatedDate()).isEqualTo(user.getCreatedDate());
         assertThat(userDTO.getLastModifiedBy()).isEqualTo(DEFAULT_LOGIN);
         assertThat(userDTO.getLastModifiedDate()).isEqualTo(user.getLastModifiedDate());
-        assertThat(userDTO.getAuthorities()).containsExactly(AuthoritiesConstants.USER);
+        assertThat(userDTO.getAuthorities()).containsExactly(UserAuthorityType.REQUESTER.name());
         assertThat(userDTO.toString()).isNotNull();
     }
 
@@ -580,13 +581,13 @@ public class UserResourceIT {
         Authority authorityB = new Authority();
         assertThat(authorityA).isEqualTo(authorityB);
 
-        authorityB.setName(AuthoritiesConstants.ADMIN);
+        authorityB.setName(UserAuthorityType.ROLE_ADMIN);
         assertThat(authorityA).isNotEqualTo(authorityB);
 
-        authorityA.setName(AuthoritiesConstants.USER);
+        authorityA.setName(UserAuthorityType.REQUESTER);
         assertThat(authorityA).isNotEqualTo(authorityB);
 
-        authorityB.setName(AuthoritiesConstants.USER);
+        authorityB.setName(UserAuthorityType.REQUESTER);
         assertThat(authorityA).isEqualTo(authorityB);
         assertThat(authorityA.hashCode()).isEqualTo(authorityB.hashCode());
     }

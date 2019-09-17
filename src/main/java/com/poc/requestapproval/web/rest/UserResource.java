@@ -188,8 +188,8 @@ public class UserResource {
     }
 
     @GetMapping("/users/approvers")
-    public List<User> getNextApprovers() {
-        return userService.getAllUsersWithRole();
+    public List<User> getNextApproversForLoggedInUser() {
+        return userService.getNextApproversForLoggedInUser();
 
     }
 }

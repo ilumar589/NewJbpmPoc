@@ -2,16 +2,13 @@ package com.poc.requestapproval.jbpm;
 
 import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.service.UserService;
 import com.poc.requestapproval.task.TaskDto;
 import com.poc.requestapproval.task.TaskRequest;
 import com.poc.requestapproval.task.TaskSummaryWrapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.support.BasicAuthorizationInterceptor;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -42,7 +39,7 @@ public class JbpmService {
 		//todo
 		// /runtime/{deploymentId}/history/instance/{procInstId}/variable
 		//return as Collection<TaskProcessDTO>
-		String processes = getProcesses();
+		List<TaskDto> processes = getProcessesForLoggedInUser();
 
 		return Objects.requireNonNull(response.getBody()).getTasks();
 	}
@@ -77,14 +74,23 @@ public class JbpmService {
         authenticatedRestTemplate.postForEntity(JBPM_CONSOLE_URL + "/rest/runtime/" + DEPLOYMENT_ID + "/process/" + PROCESS_ID + "/start",  request, null);
 	}
 
-	public String getProcesses() {
+	private List<TaskDto> getProcessesForLoggedInUser() {
 		Optional<User> user = userService.getUserWithAuthorities();
 		if(user.isPresent()) {
-			Authority authority = userService.getRequesterOrApproverRole(user);
-			String processVar = getProcessVariable(authority.getName().split("_")[0]);
+			Authority authority = user.get().getAuthorities()
+					.stream()
+					.filter(role -> !role.toString().equals(UserAuthorityType.ROLE_ADMIN))
+					.findFirst()
+					.orElseThrow(() -> new RuntimeException("User has no approval role!"));
 
-			ResponseEntity<String> response =
-                authenticatedRestTemplate.getForEntity(JBPM_CONSOLE_URL + "/rest/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances", String.class);
+			String processVar = getProcessVariable(authority.getName().toString().split("_")[0]);
+
+			ResponseEntity<List<TaskDto>> response = authenticatedRestTemplate
+					.exchange(JBPM_CONSOLE_URL + "/rest/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances",
+							HttpMethod.GET,
+							null,
+							new ParameterizedTypeReference<List<TaskDto>>() {});
+
 			return response.getBody();
 		}
 		return null;

@@ -4,6 +4,7 @@ import com.poc.requestapproval.config.Constants;
 
 import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.domain.UserAuthorityType;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -70,8 +71,10 @@ public class UserDTO {
         this.createdDate = user.getCreatedDate();
         this.lastModifiedBy = user.getLastModifiedBy();
         this.lastModifiedDate = user.getLastModifiedDate();
-        this.authorities = user.getAuthorities().stream()
+        this.authorities = user.getAuthorities()
+            .stream()
             .map(Authority::getName)
+            .map(UserAuthorityType::name)
             .collect(Collectors.toSet());
     }
 

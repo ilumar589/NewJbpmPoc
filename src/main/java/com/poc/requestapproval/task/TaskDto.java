@@ -18,6 +18,9 @@ public class TaskDto implements Serializable {
 	private String deploymentId;
 	private String processId;
 	private Long processInstanceId;
+	private String firstApprover;
+	private String secondApprover;
+	private String thirdApprover;
 
 	protected TaskDto() {
 	}
@@ -110,6 +113,30 @@ public class TaskDto implements Serializable {
 
 	public void setProcessInstanceId(Long processInstanceId) {
 		this.processInstanceId = processInstanceId;
+	}
+
+	public String getFirstApprover() {
+		return firstApprover;
+	}
+
+	public void setFirstApprover(String firstApprover) {
+		this.firstApprover = firstApprover;
+	}
+
+	public String getSecondApprover() {
+		return secondApprover;
+	}
+
+	public void setSecondApprover(String secondApprover) {
+		this.secondApprover = secondApprover;
+	}
+
+	public String getThirdApprover() {
+		return thirdApprover;
+	}
+
+	public void setThirdApprover(String thirdApprover) {
+		this.thirdApprover = thirdApprover;
 	}
 
 	public static class Builder {
