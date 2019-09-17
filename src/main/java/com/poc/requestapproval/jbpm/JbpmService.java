@@ -17,61 +17,53 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class JbpmService {
 
-	private static String DEPLOYMENT_ID = "com.requestapproval:request-approval:LATEST";
-	private static String PROCESS_ID = "ApprovalRequest";
-	private String jbpmConsoleUrl = "http://localhost:8180/jbpm-console";
+	private static final String DEPLOYMENT_ID = "com.requestapproval:request-approval:LATEST";
+	private static final String PROCESS_ID = "ApprovalRequest";
+	private static final String JBPM_CONSOLE_URL = "http://localhost:8180/jbpm-console";
 
-	@Autowired
-	private UserService userService;
+	private final UserService userService;
+	private final RestTemplate authenticatedRestTemplate;
+
+    public JbpmService(UserService userService, RestTemplate authenticatedRestTemplate) {
+        this.userService = userService;
+        this.authenticatedRestTemplate = authenticatedRestTemplate;
+    }
 
 
-	public Collection<TaskDto> query() {
-		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor("admin", "admin"));
+    public Collection<TaskDto> query() {
 		//append map_taskOwner
-		ResponseEntity<TaskSummaryWrapper> response = restTemplate.getForEntity(jbpmConsoleUrl + "/rest/task/query", TaskSummaryWrapper.class);
+		ResponseEntity<TaskSummaryWrapper> response = authenticatedRestTemplate.getForEntity(JBPM_CONSOLE_URL + "/rest/task/query", TaskSummaryWrapper.class);
 
 		//todo
 		// /runtime/{deploymentId}/history/instance/{procInstId}/variable
 		//return as Collection<TaskProcessDTO>
 		String processes = getProcesses();
 
-		return response.getBody().getTasks();
+		return Objects.requireNonNull(response.getBody()).getTasks();
 	}
 
 	public void start(Long taskId) {
-		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor("admin", "admin"));
-		restTemplate.postForEntity(jbpmConsoleUrl + "/rest/task/" + taskId + "/start",  null, null);
+        authenticatedRestTemplate.postForEntity(JBPM_CONSOLE_URL + "/rest/task/" + taskId + "/start",  null, null);
 	}
 
 	public void complete(Long taskId, Map<String, String> params) {
-		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor("admin", "admin"));
-
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-		MultiValueMap<String, String> map= new LinkedMultiValueMap<>();
+		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
 
 		for (Map.Entry<String, String> entry : params.entrySet()) {
-			map.add("map_" + entry.getKey(), entry.getValue().toString());
+			map.add("map_" + entry.getKey(), entry.getValue());
 		}
-		restTemplate.postForEntity(jbpmConsoleUrl + "/rest/task/" + taskId + "/complete",  map, null);
+        authenticatedRestTemplate.postForEntity(JBPM_CONSOLE_URL + "/rest/task/" + taskId + "/complete",  map, null);
 	}
 
 	public void startProcess(TaskRequest taskRequest) {
-		RestTemplate restTemplate = new RestTemplate();
-		restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor("admin", "admin"));
-
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -82,7 +74,7 @@ public class JbpmService {
 
 		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
-		restTemplate.postForEntity(jbpmConsoleUrl + "/rest/runtime/" + DEPLOYMENT_ID + "/process/" + PROCESS_ID + "/start",  request, null);
+        authenticatedRestTemplate.postForEntity(JBPM_CONSOLE_URL + "/rest/runtime/" + DEPLOYMENT_ID + "/process/" + PROCESS_ID + "/start",  request, null);
 	}
 
 	public String getProcesses() {
@@ -91,10 +83,8 @@ public class JbpmService {
 			Authority authority = userService.getRequesterOrApproverRole(user);
 			String processVar = getProcessVariable(authority.getName().split("_")[0]);
 
-			RestTemplate restTemplate = new RestTemplate();
-			restTemplate.getInterceptors().add(new BasicAuthorizationInterceptor("admin", "admin"));
 			ResponseEntity<String> response =
-					restTemplate.getForEntity(jbpmConsoleUrl + "/rest/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances", String.class);
+                authenticatedRestTemplate.getForEntity(JBPM_CONSOLE_URL + "/rest/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances", String.class);
 			return response.getBody();
 		}
 		return null;
