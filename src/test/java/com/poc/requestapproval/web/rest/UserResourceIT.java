@@ -547,7 +547,7 @@ public class UserResourceIT {
         user.setLastModifiedDate(Instant.now());
         Set<Authority> authorities = new HashSet<>();
         Authority authority = new Authority();
-        authority.setName(UserAuthorityType.REQUESTER);
+        authority.setName(UserAuthorityType.REQUESTER_0);
         authorities.add(authority);
         user.setAuthorities(authorities);
 
@@ -565,7 +565,7 @@ public class UserResourceIT {
         assertThat(userDTO.getCreatedDate()).isEqualTo(user.getCreatedDate());
         assertThat(userDTO.getLastModifiedBy()).isEqualTo(DEFAULT_LOGIN);
         assertThat(userDTO.getLastModifiedDate()).isEqualTo(user.getLastModifiedDate());
-        assertThat(userDTO.getAuthorities()).containsExactly(UserAuthorityType.REQUESTER.name());
+        assertThat(userDTO.getAuthorities()).containsExactly(UserAuthorityType.REQUESTER_0.name());
         assertThat(userDTO.toString()).isNotNull();
     }
 
@@ -581,13 +581,13 @@ public class UserResourceIT {
         Authority authorityB = new Authority();
         assertThat(authorityA).isEqualTo(authorityB);
 
-        authorityB.setName(UserAuthorityType.ROLE_ADMIN);
+        authorityB.setName(UserAuthorityType.ADMIN);
         assertThat(authorityA).isNotEqualTo(authorityB);
 
-        authorityA.setName(UserAuthorityType.REQUESTER);
+        authorityA.setName(UserAuthorityType.REQUESTER_0);
         assertThat(authorityA).isNotEqualTo(authorityB);
 
-        authorityB.setName(UserAuthorityType.REQUESTER);
+        authorityB.setName(UserAuthorityType.REQUESTER_0);
         assertThat(authorityA).isEqualTo(authorityB);
         assertThat(authorityA.hashCode()).isEqualTo(authorityB.hashCode());
     }

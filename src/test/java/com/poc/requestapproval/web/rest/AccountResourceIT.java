@@ -124,7 +124,7 @@ public class AccountResourceIT {
     public void testGetExistingAccount() throws Exception {
         Set<Authority> authorities = new HashSet<>();
         Authority authority = new Authority();
-        authority.setName(UserAuthorityType.ROLE_ADMIN);
+        authority.setName(UserAuthorityType.ADMIN);
         authorities.add(authority);
 
         User user = new User();
@@ -147,7 +147,7 @@ public class AccountResourceIT {
             .andExpect(jsonPath("$.email").value("john.doe@jhipster.com"))
             .andExpect(jsonPath("$.imageUrl").value("http://placehold.it/50x50"))
             .andExpect(jsonPath("$.langKey").value("en"))
-            .andExpect(jsonPath("$.authorities").value(UserAuthorityType.ROLE_ADMIN.name()));
+            .andExpect(jsonPath("$.authorities").value(UserAuthorityType.ADMIN.name()));
     }
 
     @Test

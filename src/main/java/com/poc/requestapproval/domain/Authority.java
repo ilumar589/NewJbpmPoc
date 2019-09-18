@@ -20,7 +20,6 @@ public class Authority implements Serializable {
     @Id
     @Column(length = 50)
     @Enumerated(EnumType.STRING)
-    @Convert(converter = UserAuthorityTypeConverter.class)
     private UserAuthorityType name;
 
     public Authority() {}

@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class UserService {
 
+    private static final String APPROVER = "APPROVER";
+
     private final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
@@ -293,16 +295,15 @@ public class UserService {
      * @return a list of all the authorities.
      */
     public List<String> getAuthorities() {
-        return authorityRepository.findAll().stream().map(Authority::getName).map(UserAuthorityType::name).collect(Collectors.toList());
+        return authorityRepository.findAll().stream().map(auth -> auth.getName().name()).collect(Collectors.toList());
     }
 
-    public List<User> getNextApproversForLoggedInUser() {
-        Optional<User> user = getUserWithAuthorities();
-        if(user.isPresent()) {
-            Authority authority = user.get().getAuthorities().stream().findFirst().orElse(new Authority(UserAuthorityType.REQUESTER));
-            long requiredRoleValue = Long.parseLong(authority.getName().toString().split("_")[0]) + 1;
-            return userRepository.findByAuthorities_Name(Long.toString(requiredRoleValue) + "_APPROVER");
-        }
-        return Collections.emptyList();
+    public List<User> getApproversForStep(int approvalStep) {
+    	Optional<UserAuthorityType> optionalUserAuthorityType = UserAuthorityType.typeFromIndex(approvalStep);
+    	if (optionalUserAuthorityType.isPresent()) {
+		    return userRepository.findByAuthorities_Name(optionalUserAuthorityType.get());
+	    }
+
+    	throw new RuntimeException("No users with rank " + approvalStep + " in the approval process");
     }
 }

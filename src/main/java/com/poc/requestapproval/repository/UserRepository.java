@@ -1,6 +1,7 @@
 package com.poc.requestapproval.repository;
 
 import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.domain.UserAuthorityType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -39,5 +40,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findAllByLoginNot(Pageable pageable, String login);
 
     @EntityGraph(attributePaths = "authorities")
-    List<User> findByAuthorities_Name(String role);
+    List<User> findByAuthorities_Name(UserAuthorityType userAuthorityType);
 }

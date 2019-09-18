@@ -3,6 +3,7 @@ package com.poc.requestapproval.web.rest;
 
 import com.poc.requestapproval.jbpm.JbpmService;
 import com.poc.requestapproval.task.TaskDto;
+import com.poc.requestapproval.task.TaskProcessDTO;
 import com.poc.requestapproval.task.TaskRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +23,8 @@ public class RequestResource {
 	}
 
 	@GetMapping("/requests/{userId}")
-	public Collection<TaskDto> getTasks(@PathVariable Long userId) {
-		return jbpmService.query();
+	public Collection<TaskProcessDTO> getApprovalDataForLoggedInUser(@PathVariable Long userId) {
+		return jbpmService.getApprovalDataForLoggedInUser();
 	}
 
 	@PostMapping("/requests")
