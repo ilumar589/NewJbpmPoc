@@ -79,11 +79,15 @@ public class JbpmService {
 		if(user.isPresent()) {
 			Authority authority = user.get().getAuthorities()
 					.stream()
-					.filter(role -> !role.toString().equals(UserAuthorityType.ROLE_ADMIN))
+					.filter(role -> !role.getName().equals(UserAuthorityType.ROLE_ADMIN))
 					.findFirst()
 					.orElseThrow(() -> new RuntimeException("User has no approval role!"));
 
 			String processVar = getProcessVariable(authority.getName().toString().split("_")[0]);
+
+			// see test data
+            ResponseEntity<String> stringResponseEntity =
+                authenticatedRestTemplate.getForEntity(JBPM_CONSOLE_URL + "/rest/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances", String.class);
 
 			ResponseEntity<List<TaskDto>> response = authenticatedRestTemplate
 					.exchange(JBPM_CONSOLE_URL + "/rest/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances",
