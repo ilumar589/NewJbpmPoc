@@ -140,6 +140,7 @@ public class JbpmService {
 			for (Authority authority : authorityList) {
 				String processVar = roleIndexToJbpmVariableMapping.get(authority.getName().toString().split("_")[1]);
 
+				// JaxbProcessInstanceListResponse
 				ResponseEntity<ProcessSummaryWrapper> response = authenticatedRestTemplate
 						.getForEntity(JBPM_REST_URL + "/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances", ProcessSummaryWrapper.class);
 
