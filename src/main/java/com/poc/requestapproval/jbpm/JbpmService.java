@@ -1,5 +1,6 @@
 package com.poc.requestapproval.jbpm;
 
+import com.jayway.jsonpath.JsonPath;
 import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
 import com.poc.requestapproval.domain.UserAuthorityType;
@@ -7,6 +8,7 @@ import com.poc.requestapproval.service.UserService;
 import com.poc.requestapproval.task.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -67,9 +69,9 @@ public class JbpmService {
 		return Collections.emptyList();
     }
 
-    private Object getProcessVariables(long pid) {
+    private Object getProcessVariables(int pid) {
 		ResponseEntity<String> responseEntity =
-				authenticatedRestTemplate.getForEntity(JBPM_REST_URL + "/runtime/" + DEPLOYMENT_ID + "process/instance/" + pid + "/variables", String.class);
+				authenticatedRestTemplate.getForEntity(JBPM_REST_URL + "/history/instance/" + pid + "/variable", String.class);
 
 		System.out.println(responseEntity.getBody());
 
@@ -128,6 +130,10 @@ public class JbpmService {
 	private List<ProcessDTO> getProcessesForLoggedInUser() {
 		Optional<User> user = userService.getUserWithAuthorities();
 		if(user.isPresent()) {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+			HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
 			// in case we have the same user mapped to 2 or more approval roles in separate processes
 			List<ProcessDTO> processListForAllApprovalRoles = new ArrayList<>();
 
@@ -141,13 +147,16 @@ public class JbpmService {
 				String processVar = roleIndexToJbpmVariableMapping.get(authority.getName().toString().split("_")[1]);
 
 				// JaxbProcessInstanceListResponse
-				ResponseEntity<ProcessSummaryWrapper> response = authenticatedRestTemplate
-						.getForEntity(JBPM_REST_URL + "/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances", ProcessSummaryWrapper.class);
+				ResponseEntity<String> response = authenticatedRestTemplate
+						.exchange(JBPM_REST_URL + "/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances",
+								HttpMethod.GET,
+								entity,
+								String.class);
 
-				if (response.hasBody()
-						&& response.getBody() != null
-						&& response.getBody().getProcessSummaries() != null) {
-					processListForAllApprovalRoles.addAll(response.getBody().getProcessSummaries());
+				Collection<Map<String, Object>> jsonListToBeProcessed = JsonPath.read(response.getBody(), "$.historyLogList[*].*");
+
+				for (Map<String, Object> json : jsonListToBeProcessed) {
+					processListForAllApprovalRoles.add(new ProcessDTO(json));
 				}
 			}
 
