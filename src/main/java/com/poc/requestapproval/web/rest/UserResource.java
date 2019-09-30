@@ -188,6 +188,7 @@ public class UserResource {
         return ResponseEntity.noContent().headers(HeaderUtil.createAlert(applicationName,  "A user is deleted with identifier " + login, login)).build();
     }
 
+    //TODO need approval step from frontend
     @GetMapping("/users/approvers")
     public List<User> getNextApproversForLoggedInUser(@RequestParam(defaultValue = "1") int approvalStep) {
         return userService.getApproversForStep(approvalStep);
