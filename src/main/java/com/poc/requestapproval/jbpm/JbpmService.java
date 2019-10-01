@@ -148,8 +148,6 @@ public class JbpmService {
 						String.class);
 
 		return JsonPath.read(response.getBody(), "$.historyLogList[*].*");
-
-
 	}
 
 	private List<Map<String, Object>> getProcessesForLoggedInUser() {

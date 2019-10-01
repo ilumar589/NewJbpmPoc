@@ -29,16 +29,37 @@ public class TaskProcessDTO implements Serializable {
 	public void setVariableData(Map<String, String> jsonVariableData) {
 		switch (jsonVariableData.get(VARIABLE_ID)) {
 			case REQUESTER_ID: {
-
+				setRequesterId(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
 			}break;
 			case FIRST_APPROVER: {
-
+				setFirstApproverId(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
 			}break;
 			case SECOND_APPROVER: {
-
+				setSecondApproverId(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
 			}break;
 			case THIRD_APPROVER: {
-
+				setThirdApproverId(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
+			}break;
+			case REQUESTER_NAME: {
+				setRequesterName(jsonVariableData.get(VARIABLE_VALUE));
+			}break;
+			case FIRST_APPROVER_NAME: {
+				setFirstApproverName(jsonVariableData.get(VARIABLE_VALUE));
+			}break;
+			case FIRST_APPROVER_STATUS: {
+				setFirstApproverStatus(jsonVariableData.get(VARIABLE_VALUE));
+			}break;
+			case SECOND_APPROVER_NAME: {
+				setSecondApproverName(jsonVariableData.get(VARIABLE_VALUE));
+			}break;
+			case SECOND_APPROVER_STATUS: {
+				setSecondApproverStatus(jsonVariableData.get(VARIABLE_VALUE));
+			}break;
+			case THIRD_APPROVER_NAME: {
+				setThirdApproverName(jsonVariableData.get(VARIABLE_VALUE));
+			}break;
+			case THIRD_APPROVER_STATUS: {
+				setThirdApproverStatus(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 		}
 
