@@ -76,6 +76,7 @@ public class JbpmService {
 	    	//----- Create Approval data -----//
 	    	TaskProcessDTO approvalObject = new TaskProcessDTO();
 	    	approvalObject.setProcessInstanceId(pid);
+	    	approvalObject.setDate(new Date((long) process.get(START_DATE)));
 
 	    	//--- Process variable data ----//
 		    for (Map<String, String> variable : associatedProcessVariables) {

@@ -15,13 +15,13 @@ public class TaskProcessDTO implements Serializable {
 	private Date date;
 	private long firstApproverId;
 	private String firstApproverName;
-	private String firstApproverStatus;
+	private String status1;
 	private long secondApproverId;
 	private String secondApproverName;
-	private String secondApproverStatus;
+	private String status2;
 	private long thirdApproverId;
 	private String thirdApproverName;
-	private String thirdApproverStatus;
+	private String status3;
 
 	public TaskProcessDTO() {
 	}
@@ -47,19 +47,19 @@ public class TaskProcessDTO implements Serializable {
 				setFirstApproverName(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case FIRST_APPROVER_STATUS: {
-				setFirstApproverStatus(jsonVariableData.get(VARIABLE_VALUE));
+				setStatus1(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case SECOND_APPROVER_NAME: {
 				setSecondApproverName(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case SECOND_APPROVER_STATUS: {
-				setSecondApproverStatus(jsonVariableData.get(VARIABLE_VALUE));
+				setStatus2(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case THIRD_APPROVER_NAME: {
 				setThirdApproverName(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case THIRD_APPROVER_STATUS: {
-				setThirdApproverStatus(jsonVariableData.get(VARIABLE_VALUE));
+				setStatus3(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 		}
 
@@ -121,14 +121,6 @@ public class TaskProcessDTO implements Serializable {
 		this.firstApproverName = firstApproverName;
 	}
 
-	public String getFirstApproverStatus() {
-		return firstApproverStatus;
-	}
-
-	public void setFirstApproverStatus(String firstApproverStatus) {
-		this.firstApproverStatus = firstApproverStatus;
-	}
-
 	public long getSecondApproverId() {
 		return secondApproverId;
 	}
@@ -144,15 +136,6 @@ public class TaskProcessDTO implements Serializable {
 	public void setSecondApproverName(String secondApproverName) {
 		this.secondApproverName = secondApproverName;
 	}
-
-	public String getSecondApproverStatus() {
-		return secondApproverStatus;
-	}
-
-	public void setSecondApproverStatus(String secondApproverStatus) {
-		this.secondApproverStatus = secondApproverStatus;
-	}
-
 	public long getThirdApproverId() {
 		return thirdApproverId;
 	}
@@ -169,11 +152,27 @@ public class TaskProcessDTO implements Serializable {
 		this.thirdApproverName = thirdApproverName;
 	}
 
-	public String getThirdApproverStatus() {
-		return thirdApproverStatus;
+	public String getStatus1() {
+		return status1;
 	}
 
-	public void setThirdApproverStatus(String thirdApproverStatus) {
-		this.thirdApproverStatus = thirdApproverStatus;
+	public void setStatus1(String status1) {
+		this.status1 = status1;
+	}
+
+	public String getStatus2() {
+		return status2;
+	}
+
+	public void setStatus2(String status2) {
+		this.status2 = status2;
+	}
+
+	public String getStatus3() {
+		return status3;
+	}
+
+	public void setStatus3(String status3) {
+		this.status3 = status3;
 	}
 }
