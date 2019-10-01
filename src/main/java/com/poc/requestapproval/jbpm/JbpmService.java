@@ -80,11 +80,7 @@ public class JbpmService {
 	    	approvalObject.setProcessInstanceId(pid);
 		    String pattern = "MM-dd-yyyy";
 		    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-		    try {
-			    approvalObject.setDate(simpleDateFormat.parse(simpleDateFormat.format(new Date((long) process.get(START_DATE)))));
-		    } catch (ParseException e) {
-			    e.printStackTrace();
-		    }
+		    approvalObject.setDate(simpleDateFormat.format(new Date((long) process.get(START_DATE))));
 
 	    	//--- Process variable data ----//
 		    for (Map<String, String> variable : associatedProcessVariables) {

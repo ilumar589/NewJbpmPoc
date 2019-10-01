@@ -12,7 +12,7 @@ public class TaskProcessDTO implements Serializable {
 	private long taskId;
 	private long requesterId;
 	private String requesterName;
-	private Date date;
+	private String date;
 	private long approver1;
 	private String approver1Name;
 	private String status1;
@@ -97,11 +97,11 @@ public class TaskProcessDTO implements Serializable {
 		this.requesterName = requesterName;
 	}
 
-	public Date getDate() {
+	public String getDate() {
 		return date;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(String date) {
 		this.date = date;
 	}
 
