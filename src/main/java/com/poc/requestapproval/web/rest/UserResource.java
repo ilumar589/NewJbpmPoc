@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import javax.websocket.server.PathParam;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -188,10 +189,9 @@ public class UserResource {
         return ResponseEntity.noContent().headers(HeaderUtil.createAlert(applicationName,  "A user is deleted with identifier " + login, login)).build();
     }
 
-    //TODO need approval step from frontend
-    @GetMapping("/users/approvers")
-    public List<User> getNextApproversForLoggedInUser(@RequestParam(defaultValue = "1") int approvalStep) {
-        return userService.getApproversForStep(approvalStep);
+    @GetMapping("/users/approvers/{level}")
+    public List<User> getNextApproversForLoggedInUser(@PathVariable Integer level) {
+        return userService.getApproversForStep(level);
 
     }
 }
