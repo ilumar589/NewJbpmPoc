@@ -21,25 +21,29 @@ public class JbpmService {
 	private static final String PID            = "process-instance-id";
 	private static final String START_DATE     = "start";
 	private static final String PROCESS_STATUS = "status";
-	private static final String VARIABLE_ID    = "variable-id";
-	private static final String VARIABLE_VALUE = "value";
+	public static final String VARIABLE_ID    = "variable-id";
+	public static final String VARIABLE_VALUE = "value";
 
-	private static final List<String> variableList;
+	public static final String REQUESTER_ID           = "requesterId";
+	public static final String REQUESTER_NAME         = "requesterName";
+	public static final String FIRST_APPROVER         = "firstApprover";
+	public static final String FIRST_APPROVER_NAME    = "firstApproverName";
+	public static final String FIRST_APPROVER_STATUS  = "status1";
+	public static final String SECOND_APPROVER        = "secondApprover";
+	public static final String SECOND_APPROVER_NAME   = "secondApproverName";
+	public static final String SECOND_APPROVER_STATUS = "status2";
+	public static final String THIRD_APPROVER         = "thirdApprover";
+	public static final String THIRD_APPROVER_NAME    = "thirdApproverName";
+	public static final String THIRD_APPROVER_STATUS  = "status3";
 
 	private static final Map<String, String> roleIndexToJbpmVariableMapping;
 
 	static {
-		variableList = new ArrayList<>(4);
-		variableList.add("requesterId");
-		variableList.add("firstApprover");
-		variableList.add("secondApprover");
-		variableList.add("thirdApprover");
-
 		roleIndexToJbpmVariableMapping = new HashMap<>(4);
-		roleIndexToJbpmVariableMapping.put("0", variableList.get(0));
-		roleIndexToJbpmVariableMapping.put("1", variableList.get(1));
-		roleIndexToJbpmVariableMapping.put("2", variableList.get(2));
-		roleIndexToJbpmVariableMapping.put("3", variableList.get(3));
+		roleIndexToJbpmVariableMapping.put("0", REQUESTER_ID);
+		roleIndexToJbpmVariableMapping.put("1", FIRST_APPROVER);
+		roleIndexToJbpmVariableMapping.put("2", SECOND_APPROVER);
+		roleIndexToJbpmVariableMapping.put("3", THIRD_APPROVER);
 	}
 
 	private static final String DEPLOYMENT_ID = "com.requestapproval:request-approval:LATEST";
@@ -67,12 +71,21 @@ public class JbpmService {
 	    for (Map<String, Object> process : processes) {
 	    	int pid = (int) process.get(PID);
 	    	Optional<TaskDto> associatedTask = getTaskByPidAndOwner(pid, userId);
-	    	Collection<Map<String, String>> associatedProcessVariables = getFilteredProcessVariables(pid);
+	    	Collection<Map<String, String>> associatedProcessVariables = getProcessVariables(pid);
 
 	    	//----- Create Approval data -----//
 	    	TaskProcessDTO approvalObject = new TaskProcessDTO();
 	    	approvalObject.setProcessInstanceId(pid);
-	    	associatedTask.ifPresent(task -> approvalObject.setTaskId(task.getId()));
+
+	    	//--- Process variable data ----//
+		    for (Map<String, String> variable : associatedProcessVariables) {
+		    	approvalObject.setVariableData(variable);
+		    }
+
+		    //--- Task Data ---//
+		    associatedTask.ifPresent(task -> approvalObject.setTaskId(task.getId()));
+
+	    	approvalData.add(approvalObject);
 	    }
 
 		return approvalData;
@@ -123,7 +136,7 @@ public class JbpmService {
 		return Optional.empty();
 	}
 
-	private Collection<Map<String, String>> getFilteredProcessVariables(int pid) {
+	private Collection<Map<String, String>> getProcessVariables(int pid) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 		HttpEntity<String> entity = new HttpEntity<>(null, headers);
@@ -134,9 +147,9 @@ public class JbpmService {
 						entity,
 						String.class);
 
-		Collection<Map<String, String>> jsonListToBeProcessed = JsonPath.read(response.getBody(), "$.historyLogList[*].*");
+		return JsonPath.read(response.getBody(), "$.historyLogList[*].*");
 
-		return jsonListToBeProcessed.stream().filter(variable -> variableList.contains(variable.get(VARIABLE_ID))).collect(Collectors.toList());
+
 	}
 
 	private List<Map<String, Object>> getProcessesForLoggedInUser() {

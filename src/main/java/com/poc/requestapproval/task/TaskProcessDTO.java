@@ -2,25 +2,46 @@ package com.poc.requestapproval.task;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Map;
+
+import static com.poc.requestapproval.jbpm.JbpmService.*;
 
 public class TaskProcessDTO implements Serializable {
 
 	private int processInstanceId;
-	private Long taskId;
-	private Long requesterId;
+	private long taskId;
+	private long requesterId;
 	private String requesterName;
 	private Date date;
-	private Long firstApproverId;
+	private long firstApproverId;
 	private String firstApproverName;
 	private String firstApproverStatus;
-	private Long secondApproverId;
+	private long secondApproverId;
 	private String secondApproverName;
 	private String secondApproverStatus;
-	private Long thirdApproverId;
+	private long thirdApproverId;
 	private String thirdApproverName;
 	private String thirdApproverStatus;
 
 	public TaskProcessDTO() {
+	}
+
+	public void setVariableData(Map<String, String> jsonVariableData) {
+		switch (jsonVariableData.get(VARIABLE_ID)) {
+			case REQUESTER_ID: {
+
+			}break;
+			case FIRST_APPROVER: {
+
+			}break;
+			case SECOND_APPROVER: {
+
+			}break;
+			case THIRD_APPROVER: {
+
+			}break;
+		}
+
 	}
 
 	public int getProcessInstanceId() {
@@ -31,19 +52,19 @@ public class TaskProcessDTO implements Serializable {
 		this.processInstanceId = processInstanceId;
 	}
 
-	public Long getTaskId() {
+	public long getTaskId() {
 		return taskId;
 	}
 
-	public void setTaskId(Long taskId) {
+	public void setTaskId(long taskId) {
 		this.taskId = taskId;
 	}
 
-	public Long getRequesterId() {
+	public long getRequesterId() {
 		return requesterId;
 	}
 
-	public void setRequesterId(Long requesterId) {
+	public void setRequesterId(long requesterId) {
 		this.requesterId = requesterId;
 	}
 
@@ -63,11 +84,11 @@ public class TaskProcessDTO implements Serializable {
 		this.date = date;
 	}
 
-	public Long getFirstApproverId() {
+	public long getFirstApproverId() {
 		return firstApproverId;
 	}
 
-	public void setFirstApproverId(Long firstApproverId) {
+	public void setFirstApproverId(long firstApproverId) {
 		this.firstApproverId = firstApproverId;
 	}
 
@@ -87,11 +108,11 @@ public class TaskProcessDTO implements Serializable {
 		this.firstApproverStatus = firstApproverStatus;
 	}
 
-	public Long getSecondApproverId() {
+	public long getSecondApproverId() {
 		return secondApproverId;
 	}
 
-	public void setSecondApproverId(Long secondApproverId) {
+	public void setSecondApproverId(long secondApproverId) {
 		this.secondApproverId = secondApproverId;
 	}
 
@@ -111,11 +132,11 @@ public class TaskProcessDTO implements Serializable {
 		this.secondApproverStatus = secondApproverStatus;
 	}
 
-	public Long getThirdApproverId() {
+	public long getThirdApproverId() {
 		return thirdApproverId;
 	}
 
-	public void setThirdApproverId(Long thirdApproverId) {
+	public void setThirdApproverId(long thirdApproverId) {
 		this.thirdApproverId = thirdApproverId;
 	}
 
