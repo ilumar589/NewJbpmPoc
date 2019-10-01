@@ -13,6 +13,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,7 +78,13 @@ public class JbpmService {
 	    	//----- Create Approval data -----//
 	    	TaskProcessDTO approvalObject = new TaskProcessDTO();
 	    	approvalObject.setProcessInstanceId(pid);
-	    	approvalObject.setDate(new Date((long) process.get(START_DATE)));
+		    String pattern = "MM-dd-yyyy";
+		    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+		    try {
+			    approvalObject.setDate(simpleDateFormat.parse(simpleDateFormat.format(new Date((long) process.get(START_DATE)))));
+		    } catch (ParseException e) {
+			    e.printStackTrace();
+		    }
 
 	    	//--- Process variable data ----//
 		    for (Map<String, String> variable : associatedProcessVariables) {

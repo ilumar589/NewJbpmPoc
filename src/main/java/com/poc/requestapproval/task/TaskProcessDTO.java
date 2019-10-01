@@ -13,14 +13,14 @@ public class TaskProcessDTO implements Serializable {
 	private long requesterId;
 	private String requesterName;
 	private Date date;
-	private long firstApproverId;
-	private String firstApproverName;
+	private long approver1;
+	private String approver1Name;
 	private String status1;
-	private long secondApproverId;
-	private String secondApproverName;
+	private long approver2;
+	private String approver2Name;
 	private String status2;
-	private long thirdApproverId;
-	private String thirdApproverName;
+	private long approver3;
+	private String approver3Name;
 	private String status3;
 
 	public TaskProcessDTO() {
@@ -32,31 +32,31 @@ public class TaskProcessDTO implements Serializable {
 				setRequesterId(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
 			}break;
 			case FIRST_APPROVER: {
-				setFirstApproverId(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
+				setApprover1(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
 			}break;
 			case SECOND_APPROVER: {
-				setSecondApproverId(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
+				setApprover2(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
 			}break;
 			case THIRD_APPROVER: {
-				setThirdApproverId(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
+				setApprover3(Long.parseLong(jsonVariableData.get(VARIABLE_VALUE)));
 			}break;
 			case REQUESTER_NAME: {
 				setRequesterName(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case FIRST_APPROVER_NAME: {
-				setFirstApproverName(jsonVariableData.get(VARIABLE_VALUE));
+				setApprover1Name(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case FIRST_APPROVER_STATUS: {
 				setStatus1(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case SECOND_APPROVER_NAME: {
-				setSecondApproverName(jsonVariableData.get(VARIABLE_VALUE));
+				setApprover2Name(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case SECOND_APPROVER_STATUS: {
 				setStatus2(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case THIRD_APPROVER_NAME: {
-				setThirdApproverName(jsonVariableData.get(VARIABLE_VALUE));
+				setApprover3Name(jsonVariableData.get(VARIABLE_VALUE));
 			}break;
 			case THIRD_APPROVER_STATUS: {
 				setStatus3(jsonVariableData.get(VARIABLE_VALUE));
@@ -105,51 +105,52 @@ public class TaskProcessDTO implements Serializable {
 		this.date = date;
 	}
 
-	public long getFirstApproverId() {
-		return firstApproverId;
+	public long getApprover1() {
+		return approver1;
 	}
 
-	public void setFirstApproverId(long firstApproverId) {
-		this.firstApproverId = firstApproverId;
+	public void setApprover1(long approver1) {
+		this.approver1 = approver1;
 	}
 
-	public String getFirstApproverName() {
-		return firstApproverName;
+	public String getApprover1Name() {
+		return approver1Name;
 	}
 
-	public void setFirstApproverName(String firstApproverName) {
-		this.firstApproverName = firstApproverName;
+	public void setApprover1Name(String approver1Name) {
+		this.approver1Name = approver1Name;
 	}
 
-	public long getSecondApproverId() {
-		return secondApproverId;
+	public long getApprover2() {
+		return approver2;
 	}
 
-	public void setSecondApproverId(long secondApproverId) {
-		this.secondApproverId = secondApproverId;
+	public void setApprover2(long approver2) {
+		this.approver2 = approver2;
 	}
 
-	public String getSecondApproverName() {
-		return secondApproverName;
+	public String getApprover2Name() {
+		return approver2Name;
 	}
 
-	public void setSecondApproverName(String secondApproverName) {
-		this.secondApproverName = secondApproverName;
-	}
-	public long getThirdApproverId() {
-		return thirdApproverId;
+	public void setApprover2Name(String approver2Name) {
+		this.approver2Name = approver2Name;
 	}
 
-	public void setThirdApproverId(long thirdApproverId) {
-		this.thirdApproverId = thirdApproverId;
+	public long getApprover3() {
+		return approver3;
 	}
 
-	public String getThirdApproverName() {
-		return thirdApproverName;
+	public void setApprover3(long approver3) {
+		this.approver3 = approver3;
 	}
 
-	public void setThirdApproverName(String thirdApproverName) {
-		this.thirdApproverName = thirdApproverName;
+	public String getApprover3Name() {
+		return approver3Name;
+	}
+
+	public void setApprover3Name(String approver3Name) {
+		this.approver3Name = approver3Name;
 	}
 
 	public String getStatus1() {
