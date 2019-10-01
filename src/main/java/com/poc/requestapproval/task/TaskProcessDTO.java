@@ -5,7 +5,7 @@ import java.util.Date;
 
 public class TaskProcessDTO implements Serializable {
 
-	private Long processInstanceId;
+	private int processInstanceId;
 	private Long taskId;
 	private Long requesterId;
 	private String requesterName;
@@ -23,11 +23,11 @@ public class TaskProcessDTO implements Serializable {
 	public TaskProcessDTO() {
 	}
 
-	public Long getProcessInstanceId() {
+	public int getProcessInstanceId() {
 		return processInstanceId;
 	}
 
-	public void setProcessInstanceId(Long processInstanceId) {
+	public void setProcessInstanceId(int processInstanceId) {
 		this.processInstanceId = processInstanceId;
 	}
 

@@ -6,9 +6,7 @@ import com.poc.requestapproval.domain.User;
 import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.service.UserService;
 import com.poc.requestapproval.task.*;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -18,24 +16,30 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 @Service
 public class JbpmService {
+	private static final String PID            = "process-instance-id";
+	private static final String START_DATE     = "start";
+	private static final String PROCESS_STATUS = "status";
+	private static final String VARIABLE_ID    = "variable-id";
+	private static final String VARIABLE_VALUE = "value";
 
-	private static final String JBPM_REQUESTER_VAR = "requesterId";
-	private static final String JBPM_FIRST_APPROVER_VAR = "firstApprover";
-	private static final String JBPM_SECOND_APPROVER_VAR = "secondApprover";
-	private static final String JBPM_THIRD_APPROVER_VAR = "thirdApprover";
+	private static final List<String> variableList;
 
 	private static final Map<String, String> roleIndexToJbpmVariableMapping;
 
 	static {
+		variableList = new ArrayList<>(4);
+		variableList.add("requesterId");
+		variableList.add("firstApprover");
+		variableList.add("secondApprover");
+		variableList.add("thirdApprover");
+
 		roleIndexToJbpmVariableMapping = new HashMap<>(4);
-		roleIndexToJbpmVariableMapping.put("0", JBPM_REQUESTER_VAR);
-		roleIndexToJbpmVariableMapping.put("1", JBPM_FIRST_APPROVER_VAR);
-		roleIndexToJbpmVariableMapping.put("2", JBPM_SECOND_APPROVER_VAR);
-		roleIndexToJbpmVariableMapping.put("3", JBPM_THIRD_APPROVER_VAR);
+		roleIndexToJbpmVariableMapping.put("0", variableList.get(0));
+		roleIndexToJbpmVariableMapping.put("1", variableList.get(1));
+		roleIndexToJbpmVariableMapping.put("2", variableList.get(2));
+		roleIndexToJbpmVariableMapping.put("3", variableList.get(3));
 	}
 
 	private static final String DEPLOYMENT_ID = "com.requestapproval:request-approval:LATEST";
@@ -50,51 +54,28 @@ public class JbpmService {
         this.authenticatedRestTemplate = authenticatedRestTemplate;
     }
 
-    private List<TaskDto> getTasksByPid(long pid) {
-    	String url = JBPM_REST_URL + "/task/query";
+    public Collection<TaskProcessDTO> getApprovalDataForLoggedInUser() {
+	    List<Map<String, Object>> processes = getProcessesForLoggedInUser();
+	    List<TaskProcessDTO> approvalData   = new ArrayList<>(processes.size());
+		Optional<User> optionalUser         = userService.getUserWithAuthorities();
 
-	    UriComponentsBuilder builder = UriComponentsBuilder
-			    .fromHttpUrl(url)
-			    .queryParam("processInstanceId", pid);
-
-		ResponseEntity<TaskSummaryWrapper> response =
-				authenticatedRestTemplate.getForEntity(builder.toUriString(), TaskSummaryWrapper.class);
-
-		if (response.hasBody()
-				&& response.getBody() != null
-				&& response.getBody().getTaskSummaries() != null) {
-			return response.getBody().getTaskSummaries();
+		if (!optionalUser.isPresent()) {
+			throw new RuntimeException("No logged in user!");
 		}
 
-		return Collections.emptyList();
-    }
+		long userId = optionalUser.get().getId();
+	    for (Map<String, Object> process : processes) {
+	    	int pid = (int) process.get(PID);
+	    	Optional<TaskDto> associatedTask = getTaskByPidAndOwner(pid, userId);
+	    	Collection<Map<String, String>> associatedProcessVariables = getFilteredProcessVariables(pid);
 
-    private Object getProcessVariables(int pid) {
-		ResponseEntity<String> responseEntity =
-				authenticatedRestTemplate.getForEntity(JBPM_REST_URL + "/history/instance/" + pid + "/variable", String.class);
-
-		System.out.println(responseEntity.getBody());
-
-		return responseEntity.getBody();
-    }
-
-    public Collection<TaskProcessDTO> getApprovalDataForLoggedInUser() {
-	    List<ProcessDTO> processes = getProcessesForLoggedInUser();
-	    List<TaskProcessDTO> approvalData = new ArrayList<>(processes.size());
-
-	    for (ProcessDTO process : processes) {
-	    	List<TaskDto> associatedTasks = getTasksByPid(process.getPid());
-	    	Object associatedProcessVariables = getProcessVariables(process.getPid());
+	    	//----- Create Approval data -----//
+	    	TaskProcessDTO approvalObject = new TaskProcessDTO();
+	    	approvalObject.setProcessInstanceId(pid);
+	    	associatedTask.ifPresent(task -> approvalObject.setTaskId(task.getId()));
 	    }
 
-	    //append map_taskOwner
-//	    ResponseEntity<TaskSummaryWrapper> response = authenticatedRestTemplate.getForEntity(JBPM_REST_URL + "/rest/task/query", TaskSummaryWrapper.class);
-
-	    //todo
-	    // /runtime/{deploymentId}/history/instance/{procInstId}/variable
-	    //return as Collection<TaskProcessDTO>
-
-		return null;
+		return approvalData;
 	}
 
 	public void start(Long taskId) {
@@ -102,9 +83,6 @@ public class JbpmService {
 	}
 
 	public void complete(Long taskId, Map<String, String> params) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
 		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
 
 		for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -127,7 +105,41 @@ public class JbpmService {
         authenticatedRestTemplate.postForEntity(JBPM_REST_URL + "/runtime/" + DEPLOYMENT_ID + "/process/" + PROCESS_ID + "/start",  request, null);
 	}
 
-	private List<ProcessDTO> getProcessesForLoggedInUser() {
+	private Optional<TaskDto> getTaskByPidAndOwner(long pid, long userId) {
+		String url = JBPM_REST_URL + "/task/query";
+
+		UriComponentsBuilder builder = UriComponentsBuilder
+				.fromHttpUrl(url)
+				.queryParam("processInstanceId", pid)
+				.queryParam("taskOwner", userId);
+
+		ResponseEntity<TaskSummaryWrapper> response =
+				authenticatedRestTemplate.getForEntity(builder.toUriString(), TaskSummaryWrapper.class);
+
+		if (response.hasBody() && response.getBody() != null) {
+			return response.getBody().getTaskSummaries().stream().findFirst();
+		}
+
+		return Optional.empty();
+	}
+
+	private Collection<Map<String, String>> getFilteredProcessVariables(int pid) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+		HttpEntity<String> entity = new HttpEntity<>(null, headers);
+
+		ResponseEntity<String> response =
+				authenticatedRestTemplate.exchange(JBPM_REST_URL + "/history/instance/" + pid + "/variable",
+						HttpMethod.GET,
+						entity,
+						String.class);
+
+		Collection<Map<String, String>> jsonListToBeProcessed = JsonPath.read(response.getBody(), "$.historyLogList[*].*");
+
+		return jsonListToBeProcessed.stream().filter(variable -> variableList.contains(variable.get(VARIABLE_ID))).collect(Collectors.toList());
+	}
+
+	private List<Map<String, Object>> getProcessesForLoggedInUser() {
 		Optional<User> user = userService.getUserWithAuthorities();
 		if(user.isPresent()) {
 			HttpHeaders headers = new HttpHeaders();
@@ -135,7 +147,7 @@ public class JbpmService {
 			HttpEntity<String> entity = new HttpEntity<>(null, headers);
 
 			// in case we have the same user mapped to 2 or more approval roles in separate processes
-			List<ProcessDTO> processListForAllApprovalRoles = new ArrayList<>();
+			List<Map<String, Object>> processListForAllApprovalRoles = new ArrayList<>();
 
 			// only extract approval roles
 			List<Authority> authorityList = user.get().getAuthorities()
@@ -153,11 +165,7 @@ public class JbpmService {
 								entity,
 								String.class);
 
-				Collection<Map<String, Object>> jsonListToBeProcessed = JsonPath.read(response.getBody(), "$.historyLogList[*].*");
-
-				for (Map<String, Object> json : jsonListToBeProcessed) {
-					processListForAllApprovalRoles.add(new ProcessDTO(json));
-				}
+				processListForAllApprovalRoles.addAll(JsonPath.read(response.getBody(), "$.historyLogList[*].*"));
 			}
 
 			return processListForAllApprovalRoles;
