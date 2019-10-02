@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const { BaseHrefWebpackPlugin } = require('base-href-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -51,34 +52,101 @@ module.exports = options => ({
     }
   },
   module: {
-    rules: [
-      {
-        test: /\.tsx?$/,
-        use: getTsLoaderRule(options.env),
-        include: [utils.root('./src/main/webapp/app')],
-        exclude: [utils.root('node_modules')]
-      },
-      {
-        test: /\.(jpe?g|png|gif|svg|woff2?|ttf|eot)$/i,
+    rules: [ {
+      test: /\.jsx?$/,
+      loaders: ['babel-loader', 'babel-loader?compact=false'],
+      exclude: /node_modules/
+    }, {
+      test: /(\.module\.scss)/,
+      use: [
+        {
+          loader: MiniCssExtractPlugin.loader,
+        },
+        'css-loader'
+      ]
+    }, {
+      test: /^((?!\.module).)*\.scss$/,
+      use: [
+        {
+          loader: MiniCssExtractPlugin.loader
+        },
+        'css-loader'
+      ]
+    }, {
+      // Transform our own .css files with PostCSS and CSS-modules
+      test: /\.css$/,
+      exclude: /node_modules/,
+      use: ['style-loader', 'css-loader']
+    }, {
+      // Do not transform vendor's CSS with CSS-modules The point is that they remain
+      // in global scope. Since we require these CSS files in our JS or CSS files,
+      // they will be a part of our compilation either way. So, no need for
+      // MiniCssExtractPlugin here.
+      test: /\.css$/,
+      include: /node_modules/,
+      use: ['style-loader', 'css-loader']
+    }, {
+      test: /\.(png|jpg|gif)$/,
+      use: [{
+        loader: 'url-loader',
+        options: {
+          limit: 8192,
+          mimetype: 'image/png',
+          name: '[name].[ext]',
+          outputPath: './images/',
+          publicPath: '../images/'
+        }
+      }]
+    }, {
+      test: /\.eot(\?v=\d+.\d+.\d+)?$/,
+      use: [{
         loader: 'file-loader',
         options: {
-          digest: 'hex',
-          hash: 'sha512',
-          name: 'content/[hash].[ext]'
+          name: '[name].[ext]',
+          outputPath: './fonts/',
+          publicPath: '../fonts/'
         }
-      },
-      {
-        enforce: 'pre',
-        test: /\.jsx?$/,
-        loader: 'source-map-loader'
-      },
-      {
-        test: /\.tsx?$/,
-        enforce: 'pre',
-        loader: 'tslint-loader',
-        exclude: [utils.root('node_modules')]
-      }
-    ]
+      }]
+    }, {
+      test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+      use: [{
+        loader: 'url-loader',
+        options: {
+          limit: 8192,
+          mimetype: 'application/font-woff',
+          name: '[name].[ext]',
+          outputPath: './fonts/',
+          publicPath: '../fonts/'
+        }
+      }]
+    }, {
+      test: /\.[ot]tf(\?v=\d+.\d+.\d+)?$/,
+      use: [{
+        loader: 'url-loader',
+        options: {
+          limit: 8192,
+          mimetype: 'application/octet-stream',
+          name: '[name].[ext]',
+          outputPath: './fonts/',
+          publicPath: '../fonts/'
+        }
+      }]
+    }, {
+      test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+      use: [{
+        loader: 'url-loader',
+        options: {
+          limit: 8192,
+          mimetype: 'image/svg+xml',
+          name: '[name].[ext]',
+          outputPath: './images/',
+          publicPath: '../images/'
+        }
+      }]
+    }, {
+      test: /\.json$/,
+      loader: 'json-loader'
+    }]
   },
   stats: {
     children: false
@@ -108,7 +176,12 @@ module.exports = options => ({
         SERVER_API_URL: `''`
       }
     }),
-    new ForkTsCheckerWebpackPlugin({ tslint: true }),
+
+    new MiniCssExtractPlugin({
+      filename: './styles/style.css',
+      disable: false,
+      allChunks: true
+    }),
     new CopyWebpackPlugin([
       { from: './node_modules/swagger-ui/dist/css', to: 'swagger-ui/dist/css' },
       { from: './node_modules/swagger-ui/dist/lib', to: 'swagger-ui/dist/lib' },
