@@ -86,6 +86,7 @@ public class JbpmService {
 		    for (Map<String, String> variable : associatedProcessVariables) {
 		    	approvalObject.setVariableData(variable);
 		    }
+		    enrichWithUserDetails(approvalObject);
 
 		    //--- Task Data ---//
 		    associatedTask.ifPresent(task -> approvalObject.setTaskId(task.getId()));
@@ -93,7 +94,25 @@ public class JbpmService {
 	    	approvalData.add(approvalObject);
 	    }
 
-		return approvalData;
+		return approvalData.stream().sorted((a1, a2) -> Long.compare(a2.getProcessInstanceId(), a1.getProcessInstanceId())).collect(Collectors.toList());
+	}
+
+	private void enrichWithUserDetails(TaskProcessDTO approvalObject) {
+		User requester = userService.getUser(approvalObject.getRequesterId());
+		approvalObject.setRequesterName(requester.getFirstName() + " " + requester.getLastName());
+
+		if(approvalObject.getApprover1() != 0) {
+			User firstApprover = userService.getUser(approvalObject.getApprover1());
+			approvalObject.setApprover1Name(firstApprover.getFirstName() + " " + firstApprover.getLastName());
+		}
+		if(approvalObject.getApprover2() != 0) {
+			User secondApprover = userService.getUser(approvalObject.getApprover2());
+			approvalObject.setApprover2Name(secondApprover.getFirstName() + " " + secondApprover.getLastName());
+		}
+		if(approvalObject.getApprover3() != 0) {
+			User thirdApprover = userService.getUser(approvalObject.getApprover3());
+			approvalObject.setApprover3Name(thirdApprover.getFirstName() + " " + thirdApprover.getLastName());
+		}
 	}
 
 	public void start(Long taskId) {

@@ -258,6 +258,10 @@ public class UserService {
         return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByLogin);
     }
 
+    public User getUser(Long id) {
+        return userRepository.getOne(id);
+    }
+
     /**
      * Persistent Token are used for providing automatic authentication, they should be automatically deleted after
      * 30 days.
