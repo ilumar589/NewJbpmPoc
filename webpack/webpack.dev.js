@@ -17,7 +17,7 @@ module.exports = (options) => webpackMerge(commonConfig({ env: ENV }), {
   devtool: 'cheap-module-source-map', // https://reactjs.org/docs/cross-origin-errors.html
   mode: ENV,
   entry: [
-    './src/main/webapp/app/index'
+    './src/main/webapp/app/main'
   ],
   output: {
     path: utils.root('target/classes/static/'),

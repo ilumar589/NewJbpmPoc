@@ -5,7 +5,10 @@ import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
 import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.service.UserService;
-import com.poc.requestapproval.task.*;
+import com.poc.requestapproval.task.TaskDto;
+import com.poc.requestapproval.task.TaskProcessDTO;
+import com.poc.requestapproval.task.TaskRequest;
+import com.poc.requestapproval.task.TaskSummaryWrapper;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -13,7 +16,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -61,15 +63,16 @@ public class JbpmService {
     }
 
     public Collection<TaskProcessDTO> getApprovalDataForLoggedInUser() {
+	    Optional<User> optionalUser         = userService.getUserWithAuthorities();
+	    if (!optionalUser.isPresent()) {
+		    throw new RuntimeException("No logged in user!");
+	    }
+
+	    long userId = optionalUser.get().getId();
+
 	    List<Map<String, Object>> processes = getProcessesForLoggedInUser();
 	    List<TaskProcessDTO> approvalData   = new ArrayList<>(processes.size());
-		Optional<User> optionalUser         = userService.getUserWithAuthorities();
 
-		if (!optionalUser.isPresent()) {
-			throw new RuntimeException("No logged in user!");
-		}
-
-		long userId = optionalUser.get().getId();
 	    for (Map<String, Object> process : processes) {
 	    	int pid = (int) process.get(PID);
 	    	Optional<TaskDto> associatedTask = getTaskByPidAndOwner(pid, userId);
