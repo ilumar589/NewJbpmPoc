@@ -81,7 +81,7 @@ public class JbpmService {
 	    	//----- Create Approval data -----//
 	    	TaskProcessDTO approvalObject = new TaskProcessDTO();
 	    	approvalObject.setProcessInstanceId(pid);
-		    String pattern = "MM-dd-yyyy";
+		    String pattern = "dd-MM-yyyy HH:mm";
 		    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
 		    approvalObject.setDate(simpleDateFormat.format(new Date((long) process.get(START_DATE))));
 
@@ -92,7 +92,10 @@ public class JbpmService {
 		    enrichWithUserDetails(approvalObject);
 
 		    //--- Task Data ---//
-		    associatedTask.ifPresent(task -> approvalObject.setTaskId(task.getId()));
+		    associatedTask.ifPresent(task -> {
+		    	approvalObject.setTaskId(task.getId());
+		    	approvalObject.setTaskStatus(task.getStatus());
+		    });
 
 	    	approvalData.add(approvalObject);
 	    }

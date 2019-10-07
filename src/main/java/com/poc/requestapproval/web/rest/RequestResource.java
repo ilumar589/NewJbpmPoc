@@ -46,7 +46,6 @@ public class RequestResource {
 
 	@PostMapping("/requests/decline/{taskId}")
 	public void declineRequest(@PathVariable Long taskId, @RequestBody Map<String, String> params) {
-		jbpmService.start(taskId);
 		jbpmService.complete(taskId, params);
 	}
 

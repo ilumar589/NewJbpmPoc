@@ -10,6 +10,7 @@ public class TaskProcessDTO implements Serializable {
 
 	private int processInstanceId;
 	private long taskId;
+	private String taskStatus;
 	private long requesterId;
 	private String requesterName;
 	private String date;
@@ -79,6 +80,14 @@ public class TaskProcessDTO implements Serializable {
 
 	public void setTaskId(long taskId) {
 		this.taskId = taskId;
+	}
+
+	public String getTaskStatus() {
+		return taskStatus;
+	}
+
+	public void setTaskStatus(String taskStatus) {
+		this.taskStatus = taskStatus;
 	}
 
 	public long getRequesterId() {
