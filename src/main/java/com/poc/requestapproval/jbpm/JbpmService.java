@@ -5,12 +5,10 @@ import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
 import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.service.UserService;
-import com.poc.requestapproval.task.TaskDto;
-import com.poc.requestapproval.task.TaskProcessDTO;
-import com.poc.requestapproval.task.TaskRequest;
-import com.poc.requestapproval.task.TaskSummaryWrapper;
+import com.poc.requestapproval.task.*;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -19,6 +17,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.poc.requestapproval.task.RequestStatus.APPROVED;
+import static com.poc.requestapproval.task.RequestStatus.DECLINED;
+import static com.poc.requestapproval.task.RequestStatus.PENDING;
+import static java.util.Objects.isNull;
+
 
 @Service
 public class JbpmService {
@@ -62,7 +66,7 @@ public class JbpmService {
         this.authenticatedRestTemplate = authenticatedRestTemplate;
     }
 
-    public Collection<TaskProcessDTO> getApprovalDataForLoggedInUser() {
+    public List<TaskProcessDTO> getApprovalDataForLoggedInUser() {
 	    Optional<User> optionalUser         = userService.getUserWithAuthorities();
 	    if (!optionalUser.isPresent()) {
 		    throw new RuntimeException("No logged in user!");
@@ -99,28 +103,47 @@ public class JbpmService {
 
 	    	approvalData.add(approvalObject);
 	    }
-
 		return approvalData.stream().sorted((a1, a2) -> Long.compare(a2.getProcessInstanceId(), a1.getProcessInstanceId())).collect(Collectors.toList());
+
+	    }
+
+	public List<TaskProcessDTO> getCurrentPage(List<TaskProcessDTO> processes, Integer size, Integer page) {
+		if(page == 1 && size > processes.size()) {
+			return processes.subList(0, processes.size());
+		}
+		if(Math.floorDiv(processes.size(), size) == (page-1)) {
+			return processes.subList((page-1)*size, processes.size());
+		}
+		return page == 1 ? processes.subList(0, size) : processes.subList((page-1)*size, (page-1)*size + size);
 	}
 
-	private void enrichWithUserDetails(TaskProcessDTO approvalObject) {
-		User requester = userService.getUser(approvalObject.getRequesterId());
-		approvalObject.setRequesterName(requester.getFirstName() + " " + requester.getLastName());
+	public RequestsStatistics getRequestsStatistics() {
+    	List<TaskProcessDTO> processes = getApprovalDataForLoggedInUser();
+    	Long approved = 0L;
+    	Long pending = 0L;
+    	Long declined = 0L;
 
-		if(approvalObject.getApprover1() != 0) {
-			User firstApprover = userService.getUser(approvalObject.getApprover1());
-			approvalObject.setApprover1Name(firstApprover.getFirstName() + " " + firstApprover.getLastName());
-		}
-		if(approvalObject.getApprover2() != 0) {
-			User secondApprover = userService.getUser(approvalObject.getApprover2());
-			approvalObject.setApprover2Name(secondApprover.getFirstName() + " " + secondApprover.getLastName());
-		}
-		if(approvalObject.getApprover3() != 0) {
-			User thirdApprover = userService.getUser(approvalObject.getApprover3());
-			approvalObject.setApprover3Name(thirdApprover.getFirstName() + " " + thirdApprover.getLastName());
-		}
+    	if(!CollectionUtils.isEmpty(processes)) {
+    		for(TaskProcessDTO process : processes) {
+    			if(PENDING.toString().equals(process.getStatus1()) ||
+					    PENDING.toString().equals(process.getStatus2()) ||
+					    PENDING.toString().equals(process.getStatus3())) {
+    				pending++;
+			    }
+			    if(DECLINED.toString().equals(process.getStatus1()) ||
+					    DECLINED.toString().equals(process.getStatus2()) ||
+					    DECLINED.toString().equals(process.getStatus3())) {
+    				declined++;
+			    }
+			    if(APPROVED.toString().equals(process.getStatus3())){
+    				approved++;
+			    }
+		    }
+	    }
+
+    	return new RequestsStatistics(approved, pending, declined);
+
 	}
-
 	public void start(Long taskId) {
         authenticatedRestTemplate.postForEntity(JBPM_REST_URL + "/task/" + taskId + "/start",  null, null);
 	}
@@ -199,12 +222,24 @@ public class JbpmService {
 			for (Authority authority : authorityList) {
 				String processVar = roleIndexToJbpmVariableMapping.get(authority.getName().toString().split("_")[1]);
 
+				UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(JBPM_REST_URL + "/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances");
+				// We cannot use the pagination params in this context, because we need the result to be sorted by processInstanceId, which is not possible with the current JBPM REST API
+				/*
+				if(page != null) {
+					builder.queryParam("p", page);
+				}
+				if(size != null) {
+					builder.queryParam("s", size);
+				}
+				*/
+
 				// JaxbProcessInstanceListResponse
 				ResponseEntity<String> response = authenticatedRestTemplate
-						.exchange(JBPM_REST_URL + "/history/variable/" + processVar + "/value/" + user.get().getId() + "/instances",
+						.exchange(builder.build().toUriString(),
 								HttpMethod.GET,
 								entity,
-								String.class);
+								String.class
+								);
 
 				processListForAllApprovalRoles.addAll(JsonPath.read(response.getBody(), "$.historyLogList[*].*"));
 			}
@@ -212,5 +247,23 @@ public class JbpmService {
 			return processListForAllApprovalRoles;
 		}
 		return Collections.emptyList();
+	}
+
+	private void enrichWithUserDetails(TaskProcessDTO approvalObject) {
+		User requester = userService.getUser(approvalObject.getRequesterId());
+		approvalObject.setRequesterName(requester.getFirstName() + " " + requester.getLastName());
+
+		if(approvalObject.getApprover1() != 0) {
+			User firstApprover = userService.getUser(approvalObject.getApprover1());
+			approvalObject.setApprover1Name(firstApprover.getFirstName() + " " + firstApprover.getLastName());
+		}
+		if(approvalObject.getApprover2() != 0) {
+			User secondApprover = userService.getUser(approvalObject.getApprover2());
+			approvalObject.setApprover2Name(secondApprover.getFirstName() + " " + secondApprover.getLastName());
+		}
+		if(approvalObject.getApprover3() != 0) {
+			User thirdApprover = userService.getUser(approvalObject.getApprover3());
+			approvalObject.setApprover3Name(thirdApprover.getFirstName() + " " + thirdApprover.getLastName());
+		}
 	}
 }
