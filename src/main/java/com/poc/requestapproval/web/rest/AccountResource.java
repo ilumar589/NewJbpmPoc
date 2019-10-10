@@ -2,18 +2,20 @@ package com.poc.requestapproval.web.rest;
 
 
 import com.poc.requestapproval.domain.PersistentToken;
-import com.poc.requestapproval.repository.PersistentTokenRepository;
 import com.poc.requestapproval.domain.User;
+import com.poc.requestapproval.repository.PersistentTokenRepository;
 import com.poc.requestapproval.repository.UserRepository;
 import com.poc.requestapproval.security.SecurityUtils;
 import com.poc.requestapproval.service.MailService;
 import com.poc.requestapproval.service.UserService;
 import com.poc.requestapproval.service.dto.PasswordChangeDTO;
 import com.poc.requestapproval.service.dto.UserDTO;
-import com.poc.requestapproval.web.rest.errors.*;
+import com.poc.requestapproval.web.rest.errors.EmailAlreadyUsedException;
+import com.poc.requestapproval.web.rest.errors.EmailNotFoundException;
+import com.poc.requestapproval.web.rest.errors.InvalidPasswordException;
+import com.poc.requestapproval.web.rest.errors.LoginAlreadyUsedException;
 import com.poc.requestapproval.web.rest.vm.KeyAndPasswordVM;
 import com.poc.requestapproval.web.rest.vm.ManagedUserVM;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * REST controller for managing the current user's account.
@@ -72,7 +75,7 @@ public class AccountResource {
             throw new InvalidPasswordException();
         }
         User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
-        mailService.sendActivationEmail(user);
+//        mailService.sendActivationEmail(user);
     }
 
     /**

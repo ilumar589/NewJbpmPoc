@@ -5,7 +5,6 @@ import com.poc.requestapproval.domain.Authority;
 import com.poc.requestapproval.domain.User;
 import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.repository.UserRepository;
-import com.poc.requestapproval.jbpm.JbpmService;
 import com.poc.requestapproval.security.AuthoritiesConstants;
 import com.poc.requestapproval.service.MailService;
 import com.poc.requestapproval.service.UserService;
@@ -27,11 +26,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -581,7 +583,7 @@ public class UserResourceIT {
         Authority authorityB = new Authority();
         assertThat(authorityA).isEqualTo(authorityB);
 
-        authorityB.setName(UserAuthorityType.ADMIN);
+        authorityB.setName(UserAuthorityType.ROLE_ADMIN);
         assertThat(authorityA).isNotEqualTo(authorityB);
 
         authorityA.setName(UserAuthorityType.REQUESTER_0);

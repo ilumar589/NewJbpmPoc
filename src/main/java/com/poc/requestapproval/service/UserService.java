@@ -7,7 +7,6 @@ import com.poc.requestapproval.domain.UserAuthorityType;
 import com.poc.requestapproval.repository.AuthorityRepository;
 import com.poc.requestapproval.repository.PersistentTokenRepository;
 import com.poc.requestapproval.repository.UserRepository;
-import com.poc.requestapproval.security.AuthoritiesConstants;
 import com.poc.requestapproval.security.SecurityUtils;
 import com.poc.requestapproval.service.dto.UserDTO;
 import com.poc.requestapproval.service.util.RandomUtil;
@@ -26,8 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.isNull;
 
 /**
  * Service class for managing users.
@@ -108,16 +112,19 @@ public class UserService {
         // new user gets initially a generated password
         newUser.setPassword(encryptedPassword);
         newUser.setFirstName(userDTO.getFirstName());
+       /*
         newUser.setLastName(userDTO.getLastName());
         newUser.setEmail(userDTO.getEmail().toLowerCase());
         newUser.setImageUrl(userDTO.getImageUrl());
-        newUser.setLangKey(userDTO.getLangKey());
+        */
+        newUser.setLangKey("en");
+
         // new user is not active
-        newUser.setActivated(false);
+        newUser.setActivated(true);
         // new user gets registration key
         newUser.setActivationKey(RandomUtil.generateActivationKey());
         Set<Authority> authorities = new HashSet<>();
-        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
+        authorityRepository.findOneByName(UserAuthorityType.ROLE_USER).ifPresent(authorities::add);
         newUser.setAuthorities(authorities);
         userRepository.save(newUser);
         log.debug("Created Information for User: {}", newUser);
@@ -193,21 +200,21 @@ public class UserService {
      */
     public Optional<UserDTO> updateUser(UserDTO userDTO) {
         return Optional.of(userRepository
-            .findById(userDTO.getId()))
+            .findOneWithAuthoritiesByLogin(userDTO.getLogin()))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .map(user -> {
                 user.setLogin(userDTO.getLogin().toLowerCase());
-                user.setFirstName(userDTO.getFirstName());
-                user.setLastName(userDTO.getLastName());
-                user.setEmail(userDTO.getEmail().toLowerCase());
-                user.setImageUrl(userDTO.getImageUrl());
-                user.setActivated(userDTO.isActivated());
-                user.setLangKey(userDTO.getLangKey());
+                user.setFirstName(!isNull(userDTO.getFirstName()) ? userDTO.getFirstName().toLowerCase() : user.getFirstName());
+                user.setLastName(!isNull(userDTO.getLastName()) ? userDTO.getLastName().toLowerCase() : user.getLastName());
+                user.setEmail(!isNull(userDTO.getEmail()) ? userDTO.getEmail().toLowerCase() : user.getEmail());
+                user.setImageUrl(!isNull(userDTO.getImageUrl()) ? userDTO.getImageUrl().toLowerCase() : user.getImageUrl());
+                user.setActivated(user.getActivated());
+                user.setLangKey(!isNull(userDTO.getLangKey()) ? userDTO.getLangKey().toLowerCase() : user.getLangKey());
                 Set<Authority> managedAuthorities = user.getAuthorities();
                 managedAuthorities.clear();
                 userDTO.getAuthorities().stream()
-                    .map(authorityRepository::findById)
+                    .map(authority -> authorityRepository.findOneByName(UserAuthorityType.fromValue(authority)))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .forEach(managedAuthorities::add);

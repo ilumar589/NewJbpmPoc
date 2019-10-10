@@ -1,5 +1,5 @@
 user_id;authority_name
-3;ADMIN
+3;ROLE_ADMIN
 4;REQUESTER_0
 5;APPROVER_1
 6;APPROVER_1
@@ -9,3 +9,4 @@ user_id;authority_name
 10;APPROVER_3
 11;APPROVER_1
 11;APPROVER_2
+3;ROLE_USER

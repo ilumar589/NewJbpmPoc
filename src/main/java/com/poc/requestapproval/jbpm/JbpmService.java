@@ -16,11 +16,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static com.poc.requestapproval.task.RequestStatus.APPROVED;
-import static com.poc.requestapproval.task.RequestStatus.DECLINED;
-import static com.poc.requestapproval.task.RequestStatus.PENDING;
+import static com.poc.requestapproval.task.RequestStatus.*;
 import static java.util.Objects.isNull;
 
 
@@ -66,7 +66,7 @@ public class JbpmService {
         this.authenticatedRestTemplate = authenticatedRestTemplate;
     }
 
-    public List<TaskProcessDTO> getApprovalDataForLoggedInUser() {
+    public List<TaskProcessDTO> getFilteredApprovalDataForLoggedInUser(RequestFilter filter) {
 	    Optional<User> optionalUser         = userService.getUserWithAuthorities();
 	    if (!optionalUser.isPresent()) {
 		    throw new RuntimeException("No logged in user!");
@@ -74,7 +74,7 @@ public class JbpmService {
 
 	    long userId = optionalUser.get().getId();
 
-	    List<Map<String, Object>> processes = getProcessesForLoggedInUser();
+	    List<Map<String, Object>> processes = getProcessesForLoggedInUser().stream().distinct().collect(Collectors.toList());
 	    List<TaskProcessDTO> approvalData   = new ArrayList<>(processes.size());
 
 	    for (Map<String, Object> process : processes) {
@@ -85,7 +85,7 @@ public class JbpmService {
 	    	//----- Create Approval data -----//
 	    	TaskProcessDTO approvalObject = new TaskProcessDTO();
 	    	approvalObject.setProcessInstanceId(pid);
-		    String pattern = "dd-MM-yyyy HH:mm";
+		    String pattern = "MM/dd/yyyy HH:mm";
 		    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
 		    approvalObject.setDate(simpleDateFormat.format(new Date((long) process.get(START_DATE))));
 
@@ -103,9 +103,48 @@ public class JbpmService {
 
 	    	approvalData.add(approvalObject);
 	    }
-		return approvalData.stream().sorted((a1, a2) -> Long.compare(a2.getProcessInstanceId(), a1.getProcessInstanceId())).collect(Collectors.toList());
 
+	    approvalData = !isNull(filter) ? filterData(approvalData, filter) : approvalData;
+		return approvalData.stream().sorted((a1, a2) -> Long.compare(a2.getProcessInstanceId(), a1.getProcessInstanceId())).collect(Collectors.toList());
+    }
+
+    private List<TaskProcessDTO> filterData(List<TaskProcessDTO> approvalData, RequestFilter requestFilter) {
+	    Predicate<TaskProcessDTO> filter =  Stream.of(
+			    getRequesterFilter(requestFilter.getRequester()),
+			    getDateFilter(requestFilter.getDate()),
+			    getApproverFilter(requestFilter.getApprover()),
+			    getStatusFilter(requestFilter.getStatus())
+	    ).filter(Objects::nonNull).reduce(Predicate::and).orElse(x -> true);
+
+	    return approvalData.stream()
+			    .filter(filter)
+			    .collect(Collectors.toList());
+    }
+
+
+	private Predicate<TaskProcessDTO> getRequesterFilter(String requester) {
+		return !isNull(requester) ? task -> task.getRequesterName().toLowerCase().contains(requester.toLowerCase()) : null;
+	}
+	private Predicate<TaskProcessDTO> getDateFilter(String date) {
+		return !isNull(date) ? task -> task.getDate().contains(date) : null;
+	}
+	private Predicate<TaskProcessDTO> getApproverFilter(String approver) {
+		return !isNull(approver) ?
+				task -> task.getApprover1Name().toLowerCase().contains(approver.toLowerCase()) ||
+						(!isNull(task.getApprover2Name()) && task.getApprover2Name().toLowerCase().contains(approver.toLowerCase())) ||
+						(!isNull(task.getApprover3Name()) && task.getApprover3Name().toLowerCase().contains(approver.toLowerCase())) :
+				null;
+	}
+	private Predicate<TaskProcessDTO> getStatusFilter(RequestStatus status) {
+    	if(!isNull(status) && APPROVED.equals(status)) {
+    		return task -> status.toString().equals(task.getStatus3());
 	    }
+		return !isNull(status) ?
+				task -> task.getStatus1().equals(status.toString()) ||
+						(!isNull(task.getStatus2()) && task.getStatus2().equals(status.toString())) ||
+						(!isNull(task.getStatus3()) && task.getStatus3().equals(status.toString())) :
+				null;
+	}
 
 	public List<TaskProcessDTO> getCurrentPage(List<TaskProcessDTO> processes, Integer size, Integer page) {
 		if(page == 1 && size > processes.size()) {
@@ -117,8 +156,8 @@ public class JbpmService {
 		return page == 1 ? processes.subList(0, size) : processes.subList((page-1)*size, (page-1)*size + size);
 	}
 
-	public RequestsStatistics getRequestsStatistics() {
-    	List<TaskProcessDTO> processes = getApprovalDataForLoggedInUser();
+	public RequestsStatistics getRequestsStatistics(RequestFilter requestFilter) {
+    	List<TaskProcessDTO> processes = getFilteredApprovalDataForLoggedInUser(requestFilter);
     	Long approved = 0L;
     	Long pending = 0L;
     	Long declined = 0L;
@@ -183,7 +222,7 @@ public class JbpmService {
 				authenticatedRestTemplate.getForEntity(builder.toUriString(), TaskSummaryWrapper.class);
 
 		if (response.hasBody() && response.getBody() != null) {
-			return response.getBody().getTaskSummaries().stream().findFirst();
+			return response.getBody().getTaskSummaries().stream().sorted((t1, t2) -> Long.compare(t2.getId(), t1.getId())).findFirst();
 		}
 
 		return Optional.empty();
@@ -216,7 +255,7 @@ public class JbpmService {
 			// only extract approval roles
 			List<Authority> authorityList = user.get().getAuthorities()
 					.stream()
-					.filter(role -> !role.getName().equals(UserAuthorityType.ADMIN))
+					.filter(role -> !role.getName().equals(UserAuthorityType.ROLE_ADMIN))
 					.collect(Collectors.toList());
 
 			for (Authority authority : authorityList) {

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public enum UserAuthorityType {
-	ADMIN, REQUESTER_0, APPROVER_1, APPROVER_2, APPROVER_3;
+	ROLE_ADMIN, REQUESTER_0, APPROVER_1, APPROVER_2, APPROVER_3, ROLE_USER;
 
 	/**
 	 * cached data only for roles that take part in the approval process

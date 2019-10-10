@@ -18,7 +18,6 @@ import com.poc.requestapproval.web.rest.errors.ExceptionTranslator;
 import com.poc.requestapproval.web.rest.vm.KeyAndPasswordVM;
 import com.poc.requestapproval.web.rest.vm.ManagedUserVM;
 import org.apache.commons.lang3.RandomStringUtils;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -35,7 +34,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
@@ -124,7 +126,7 @@ public class AccountResourceIT {
     public void testGetExistingAccount() throws Exception {
         Set<Authority> authorities = new HashSet<>();
         Authority authority = new Authority();
-        authority.setName(UserAuthorityType.ADMIN);
+        authority.setName(UserAuthorityType.ROLE_ADMIN);
         authorities.add(authority);
 
         User user = new User();
@@ -147,7 +149,7 @@ public class AccountResourceIT {
             .andExpect(jsonPath("$.email").value("john.doe@jhipster.com"))
             .andExpect(jsonPath("$.imageUrl").value("http://placehold.it/50x50"))
             .andExpect(jsonPath("$.langKey").value("en"))
-            .andExpect(jsonPath("$.authorities").value(UserAuthorityType.ADMIN.name()));
+            .andExpect(jsonPath("$.authorities").value(UserAuthorityType.ROLE_ADMIN.name()));
     }
 
     @Test
